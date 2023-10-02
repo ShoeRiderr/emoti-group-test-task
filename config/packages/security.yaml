@@ -4,14 +4,24 @@ security:
         Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
     # https://symfony.com/doc/current/security.html#loading-the-user-the-user-provider
     providers:
+        users:
+            entity:
+                class: 'App\Entity\User'
+                property: apiToken
         users_in_memory: { memory: null }
     firewalls:
+    
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
         main:
             lazy: true
             provider: users_in_memory
+            # json_login:
+            #     # api_login is a route we will create below
+            #     check_path: api_login
+            # custom_authenticators:
+            #     - App\Security\ApiKeyAuthenticator
 
             # activate different ways to authenticate
             # https://symfony.com/doc/current/security.html#the-firewall
