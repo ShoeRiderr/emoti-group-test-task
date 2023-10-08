@@ -46,3 +46,31 @@ Symfony Docker is available under the MIT License.
 ## Credits
 
 Created by [Kévin Dunglas](https://dunglas.dev), co-maintained by [Maxime Helias](https://twitter.com/maxhelias) and sponsored by [Les-Tilleuls.coop](https://les-tilleuls.coop).
+
+
+## Application setup
+
+To create database, run migration and fill tables with some dumy data you have to follow following steps:
+- in command prompt type:
+```
+docker exec -it emoti-group-test-task-php-1 /bin/sh
+```
+- then 
+```
+php bin/console doctrine:database:create
+```
+- next
+```
+php bin/console doctrine:migrations:migrate
+```
+- and finally
+```
+php bin/console doctrine:fixtures:load
+```
+
+For the info about available api endpoints you can visit `/api` route.
+
+## Indeas for improving the application
+
+- The application can become a package, which will deliver ready solution for the reservation feature.
+- Another idea is to add table which will represent place, where we book dates.
