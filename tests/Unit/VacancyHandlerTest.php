@@ -10,7 +10,7 @@ use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityManager;
 
-class ReservationHandlerTest extends KernelTestCase
+class VacancyHandlerTest extends KernelTestCase
 {
     private ?EntityManager $entityManager;
     private ReservationHandler $reservationHandler;

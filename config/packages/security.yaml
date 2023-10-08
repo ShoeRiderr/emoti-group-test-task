@@ -1,27 +1,37 @@
 security:
+    enable_authenticator_manager: true
     # https://symfony.com/doc/current/security.html#registering-the-user-hashing-passwords
     password_hashers:
-        Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
+        Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: "auto"
+        App\Entity\User:
+            algorithm: auto
     # https://symfony.com/doc/current/security.html#loading-the-user-the-user-provider
     providers:
-        users:
+        app_user_provider:
             entity:
-                class: 'App\Entity\User'
-                property: apiToken
-        users_in_memory: { memory: null }
+                class: App\Entity\User
+                property: email
     firewalls:
-    
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
         main:
             lazy: true
-            provider: users_in_memory
-            # json_login:
-            #     # api_login is a route we will create below
-            #     check_path: api_login
-            # custom_authenticators:
-            #     - App\Security\ApiKeyAuthenticator
+            provider: app_user_provider
+            json_login:
+                check_path: api_login
+                username_path: email
+                password_path: password
+            custom_authenticator:
+                - App\Security\ApiKeyAuthenticator
+            logout:
+                path: app_logout
+
+            remember_me:
+                secret: '%kernel.secret%'
+                lifetime: 604800
+                path: /
+                always_remember_me: true
 
             # activate different ways to authenticate
             # https://symfony.com/doc/current/security.html#the-firewall

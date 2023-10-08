@@ -8,7 +8,9 @@ use App\Entity\Vacancy;
 use App\Repository\UserRepository;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
+use Exception;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\HttpFoundation\Response;
 
 class ReservationHandler
 {
@@ -21,8 +23,17 @@ class ReservationHandler
         $this->price = 0;
     }
 
+    /**
+     * @throw Exception
+     */
     public function reservate(?User $user, array $data): ?array
     {
+        $startDate = new DateTimeImmutable($data['start_date'] ?? '');
+        $endDate = new DateTimeImmutable($data['end_date'] ?? '');
+        $bookedPlaces = $data['booked_places'] ?? 1;
+
+        $this->validateRequestedDateRangeAvailability($startDate, $endDate, $bookedPlaces);
+
         if (!$user) {
             $email = $data['email'] ?? '';
 
@@ -45,9 +56,6 @@ class ReservationHandler
         }
 
         $currentDate = new DateTimeImmutable();
-        $startDate = new DateTimeImmutable($data['start_date'] ?? '');
-        $endDate = new DateTimeImmutable($data['end_date'] ?? '');
-        $bookedPlaces = $data['booked_places'] ?? 1;
 
         $reservation = new Reservation();
         $reservation->setUser($user);
@@ -128,5 +136,28 @@ class ReservationHandler
         }
 
         return $result;
+    }
+
+    /**
+     * @throw Exception
+     */
+    public function validateRequestedDateRangeAvailability(
+        DateTimeImmutable $startDate,
+        DateTimeImmutable $endDate,
+        int $bookedPlaces = 1
+    ): bool {
+        /**
+         * @var Vacancy[] $vacancies
+         */
+        $vacancies = $this->manager->getRepository(Vacancy::class)
+            ->findByDateRange($startDate, $endDate);
+
+        foreach ($vacancies as $vacancy) {
+            if ($vacancy->getFree() < $bookedPlaces) {
+                throw new Exception('Not enough available vacancies.', Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
+        }
+
+        return true;
     }
 }

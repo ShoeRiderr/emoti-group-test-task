@@ -1,23 +1,20 @@
 <?php
 
-namespace App\Controller;
+namespace App\Controller\Reservation;
 
 use App\DependencyInjection\ReservationHandler;
-use App\Requests\ReservationRequest;
+use App\Entity\Reservation;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\AsController;
 
 #[AsController]
-class CreateReservationController extends AbstractController
+class DeleteController extends AbstractController
 {
-    public function __invoke(ReservationRequest $request, ReservationHandler $reservationHandler): JsonResponse
+    public function __invoke(Reservation $reservation, ReservationHandler $reservationHandler): JsonResponse
     {
-        $request->validate();
-
-        $result = $reservationHandler->reservate($this->getUser(), $request->toArray());
+        $result = $reservationHandler->cancel($reservation);
         $status = $result ? Response::HTTP_OK : Response::HTTP_INTERNAL_SERVER_ERROR;
 
         return $this->json([

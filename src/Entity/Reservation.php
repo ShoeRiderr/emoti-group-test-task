@@ -7,27 +7,31 @@ use ApiPlatform\Metadata\Delete;
 use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Post;
-use App\Controller\CreateReservationController;
-use App\Controller\DeleteReservationController;
+use App\Controller\Reservation\CreateController;
+use App\Controller\Reservation\DeleteController;
 use App\Repository\ReservationRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: ReservationRepository::class)]
 #[ApiResource(
     operations: [
-        new GetCollection(),
+        new GetCollection(
+            paginationItemsPerPage: 10,
+            stateless: false,
+        ),
         new Get(),
         new Post(
             name: 'reservations_create',
             uriTemplate: '/reservations',
-            controller: CreateReservationController::class,
+            controller: CreateController::class,
             stateless: false
         ),
         new Delete(
             name: 'reservations_delete',
             uriTemplate: '/reservations/{id}',
-            controller: DeleteReservationController::class,
+            controller: DeleteController::class,
             stateless: false
         ),
     ]
@@ -40,9 +44,13 @@ class Reservation
     private ?int $id = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE)]
+    #[Assert\NotBlank]
+    #[Assert\Type('date')]
     private ?\DateTimeInterface $startDate = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE)]
+    #[Assert\NotBlank]
+    #[Assert\Type('date')]
     private ?\DateTimeInterface $endDate = null;
 
     #[ORM\ManyToOne(inversedBy: 'reservations')]
@@ -69,6 +77,8 @@ class Reservation
     #[ORM\Column(options: [
         "default" => 1
     ])]
+    #[Assert\NotBlank]
+    #[Assert\Type('int')]
     private ?int $bookedPlaces = null;
 
     public function getId(): ?int

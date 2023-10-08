@@ -12,6 +12,8 @@ use Doctrine\Persistence\ObjectManager;
 
 class ReservationFixtures extends Fixture implements DependentFixtureInterface
 {
+    public const RESERVATION_AMOUNT = 10;
+
     public function __construct(private ReservationHandler $reservationHandler)
     {
     }
@@ -20,15 +22,15 @@ class ReservationFixtures extends Fixture implements DependentFixtureInterface
     {
         $currentDate = new DateTimeImmutable();
 
-        for ($i = 1; $i <= 10; $i++) {
+        for ($i = 1; $i <= self::RESERVATION_AMOUNT; $i++) {
             $startDate = $currentDate;
             $endDate = $currentDate;
 
-            $startDate->modify(sprintf("+%d day", $i));
+            $startDate = $startDate->modify(sprintf("+%d day", $i));
 
             $randEnd = rand($i, (50 - $i));
 
-            $endDate->modify(sprintf("+%d day", $randEnd));
+            $endDate = $endDate->modify(sprintf("+%d day", $randEnd));
             $bookedPlaces = rand(1, 3);
             $price = $this->reservationHandler
                 ->handleVacanciesAfterBookReservation($startDate, $endDate, $bookedPlaces)

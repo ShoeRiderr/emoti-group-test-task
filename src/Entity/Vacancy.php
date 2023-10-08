@@ -3,13 +3,35 @@
 namespace App\Entity;
 
 use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Delete;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Post;
+use App\Controller\Vacancy\CreateController;
 use App\Repository\VacancyRepository;
 use Doctrine\DBAL\Types\DecimalType;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: VacancyRepository::class)]
-#[ApiResource]
+#[ApiResource(
+    operations: [
+        new GetCollection(
+            paginationItemsPerPage: 10,
+            stateless: false
+        ),
+        new Get(),
+        new Post(
+            name: 'vacancies_create',
+            uriTemplate: '/vacancies',
+            controller: CreateController::class,
+            stateless: false,
+            security: 'is_granted("ROLE_ADMIN")',
+        ),
+        new Delete(),
+    ]
+)]
 class Vacancy
 {
     #[ORM\Id]
@@ -18,12 +40,18 @@ class Vacancy
     private ?int $id = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE, unique: true)]
+    #[Assert\NotNull]
+    #[Assert\Type('date')]
     private ?\DateTimeInterface $date = null;
 
     #[ORM\Column]
+    #[Assert\NotNull]
+    #[Assert\Type('int')]
     private ?int $free = null;
 
     #[ORM\Column]
+    #[Assert\NotNull]
+    #[Assert\Type('numeric')]
     private ?int $price = null;
 
     #[ORM\Column]

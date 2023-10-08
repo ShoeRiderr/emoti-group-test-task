@@ -17,6 +17,7 @@ class ApiToken
     private ?string $token = null;
 
     #[ORM\ManyToOne(inversedBy: 'apiTokens')]
+    #[ORM\JoinColumn(nullable: false)]
     private ?User $user = null;
 
     public function getId(): ?int
