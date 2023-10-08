@@ -18,6 +18,10 @@ class ReservationHandlerTest extends KernelTestCase
     private DateTimeImmutable $tommorow;
     private DateTimeImmutable $dayAfterTommorow;
     private int $bookedPlaces;
+    /**
+     * @var array<string,?Vacancy> $vacancies
+     */
+    private array $vacancies;
 
     protected function setUp(): void
     {
@@ -29,10 +33,15 @@ class ReservationHandlerTest extends KernelTestCase
         $this->tommorow = $this->currentDate->modify('+1 day');
         $this->dayAfterTommorow = $this->currentDate->modify('+2 day');
         $this->bookedPlaces = 2;
+
+        $this->entityManager->getConnection()->setNestTransactionsWithSavepoints(true);
+        $this->entityManager->beginTransaction();
+        $this->vacancies = $this->prepareVacancies();
     }
 
     protected function tearDown(): void
     {
+        $this->entityManager->rollback();
         parent::tearDown();
 
         // doing this is recommended to avoid memory leaks
@@ -43,11 +52,6 @@ class ReservationHandlerTest extends KernelTestCase
     public function testSuccessfulUseOfReservateMethod(): void
     {
         $email = 'test@example.com';
-
-        /**
-         * @var array<string,?Vacancy> $vacancies
-         */
-        $vacancies = $this->prepareVacancies();
 
         $data = array_merge(
             $this->prepareResarvationBasicPayload(),
@@ -63,19 +67,14 @@ class ReservationHandlerTest extends KernelTestCase
 
         $this->assertNotNull($reservation);
         // Check amount of available places in vacancy table
-        $this->assertSame(8, $vacancies['vacancy1']?->getFree());
-        $this->assertSame(13, $vacancies['vacancy2']?->getFree());
+        $this->assertSame(8, $this->vacancies['vacancy1']?->getFree());
+        $this->assertSame(13, $this->vacancies['vacancy2']?->getFree());
         // Check reservation price
         $this->assertSame(70, $reservation['price'] ?? 0);
     }
 
     public function testFailUseOfReservateMethod(): void
     {
-        /**
-         * @var array<string,?Vacancy> $vacancies
-         */
-        $vacancies = $this->prepareVacancies();
-
         $data = $this->prepareResarvationBasicPayload();
 
         /**
@@ -83,23 +82,16 @@ class ReservationHandlerTest extends KernelTestCase
          */
         $reservation = $this->reservationHandler->reservate(null, $data);
 
-        $this->assertNotNull($reservation);
-        // Check amount of available places in vacancy table
-        $this->assertSame(8, $vacancies['vacancy1']?->getFree());
-        $this->assertSame(13, $vacancies['vacancy2']?->getFree());
-        // Check reservation price
-        $this->assertSame(70, $reservation['price'] ?? 0);
+        $this->assertNull($reservation);
     }
 
     public function testSuccessfulUseOfCancelMethod()
     {
         $email = 'test@example.com';
 
-        $vacancies = $this->prepareVacancies();
-
         $freeVacanciesBeforeReservation = array_map(function ($vacancy) {
             return $vacancy->getFree();
-        }, $vacancies);
+        }, $this->vacancies);
 
         $data = array_merge(
             $this->prepareResarvationBasicPayload(),
@@ -120,7 +112,7 @@ class ReservationHandlerTest extends KernelTestCase
 
         $freeVacanciesAfterCancelation = array_map(function ($vacancy) {
             return $vacancy->getFree();
-        }, $vacancies);
+        }, $this->vacancies);
 
         $this->assertSame(true, $result);
         $this->assertSame($freeVacanciesBeforeReservation, $freeVacanciesAfterCancelation);
@@ -138,6 +130,7 @@ class ReservationHandlerTest extends KernelTestCase
         $vacancy->setUpdatedAt($this->currentDate);
         $vacancy->setCreatedAt($this->currentDate);
         $this->entityManager->persist($vacancy);
+        $this->entityManager->flush();
 
         $vacancy2 = new Vacancy();
         $vacancy2->setDate($this->dayAfterTommorow);
@@ -146,7 +139,6 @@ class ReservationHandlerTest extends KernelTestCase
         $vacancy2->setUpdatedAt($this->currentDate);
         $vacancy2->setCreatedAt($this->currentDate);
         $this->entityManager->persist($vacancy2);
-
         $this->entityManager->flush();
 
         return [

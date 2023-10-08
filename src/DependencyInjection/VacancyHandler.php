@@ -12,31 +12,38 @@ class VacancyHandler
     {
     }
 
-    public function create(array $data): string
+    public function create(array $data): ?Vacancy
     {
-        $message = 'Vacancy with given date alredy exists. Record with choosen date is updated successfully.';
-        $date = new DateTimeImmutable($data['date'] ?? '');
-        $free = $data['free'] ?? '';
-        $price = $data['price'] ?? '';
+        $date = $data['date'];
+        $free = $data['free'];
+        $price = $data['price'];
+
+        if (!isset($date) || !isset($free) || !isset($price)) {
+            return null;
+        }
+
+        $currentDate = new DateTimeImmutable();
+        $date = new DateTimeImmutable($date);
 
         /**
          * @var ?Vacancy $vacancy
          */
         $vacancy = $this->manager->getRepository(Vacancy::class)
-            ->findByOne(['date' => $data['date'] ?? '']);
+            ->findOneBy(['date' => $date]);
 
         if (!$vacancy) {
-            $message = 'Vacancy created successfully.';
             $vacancy = new Vacancy();
         }
 
         $vacancy->setDate($date);
         $vacancy->setFree($free);
         $vacancy->setPrice($price);
+        $vacancy->setCreatedAt($currentDate);
+        $vacancy->setUpdatedAt($currentDate);
 
         $this->manager->persist($vacancy);
         $this->manager->flush();
 
-        return $message;
+        return $vacancy;
     }
 }

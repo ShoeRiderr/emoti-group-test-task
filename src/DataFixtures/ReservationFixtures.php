@@ -4,7 +4,6 @@ namespace App\DataFixtures;
 
 use App\DependencyInjection\ReservationHandler;
 use App\Entity\Reservation;
-use App\Entity\Vacancy;
 use DateTimeImmutable;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Common\DataFixtures\DependentFixtureInterface;

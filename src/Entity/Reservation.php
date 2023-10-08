@@ -21,7 +21,7 @@ use Symfony\Component\Validator\Constraints as Assert;
             paginationItemsPerPage: 10,
             stateless: false,
         ),
-        new Get(),
+        new Get(stateless: false),
         new Post(
             name: 'reservations_create',
             uriTemplate: '/reservations',
@@ -32,7 +32,8 @@ use Symfony\Component\Validator\Constraints as Assert;
             name: 'reservations_delete',
             uriTemplate: '/reservations/{id}',
             controller: DeleteController::class,
-            stateless: false
+            stateless: false,
+            security: 'is_granted("ROLE_ADMIN") or (object.user == user and previous_object.user == user)',
         ),
     ]
 )]

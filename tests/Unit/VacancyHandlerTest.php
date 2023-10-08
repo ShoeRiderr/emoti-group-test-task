@@ -2,8 +2,7 @@
 
 namespace App\Tests\Unit;
 
-use App\DependencyInjection\ReservationHandler;
-use App\Entity\Reservation;
+use App\DependencyInjection\VacancyHandler;
 use App\Entity\Vacancy;
 use DateTimeImmutable;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
@@ -13,26 +12,30 @@ use Doctrine\ORM\EntityManager;
 class VacancyHandlerTest extends KernelTestCase
 {
     private ?EntityManager $entityManager;
-    private ReservationHandler $reservationHandler;
+    private VacancyHandler $vacancyHandler;
     private DateTimeImmutable $currentDate;
-    private DateTimeImmutable $tommorow;
-    private DateTimeImmutable $dayAfterTommorow;
-    private int $bookedPlaces;
+    private DateTimeImmutable $date;
+    private int $price;
+    private int $free;
 
     protected function setUp(): void
     {
         $this->entityManager = self::getContainer()->get(EntityManagerInterface::class);
-        $this->reservationHandler = self::getContainer()->get(ReservationHandler::class);
+        $this->vacancyHandler = self::getContainer()->get(VacancyHandler::class);
 
         $this->currentDate = new DateTimeImmutable();
 
-        $this->tommorow = $this->currentDate->modify('+1 day');
-        $this->dayAfterTommorow = $this->currentDate->modify('+2 day');
-        $this->bookedPlaces = 2;
+        $this->date = $this->currentDate->modify('+1 day');
+        $this->price = rand(100, 10000);
+        $this->free = rand(1, 50);
+
+        $this->entityManager->getConnection()->setNestTransactionsWithSavepoints(true);
+        $this->entityManager->beginTransaction();
     }
 
     protected function tearDown(): void
     {
+        $this->entityManager->rollback();
         parent::tearDown();
 
         // doing this is recommended to avoid memory leaks
@@ -40,127 +43,55 @@ class VacancyHandlerTest extends KernelTestCase
         $this->entityManager = null;
     }
 
-    public function testSuccessfulUseOfReservateMethod(): void
+    public function testSuccessfulUseOfCreateMethod(): void
     {
-        $email = 'test@example.com';
+        $data = $this->prepareVacancyBasicPayload();
 
         /**
-         * @var array<string,?Vacancy> $vacancies
+         * @var Vacancy $vacancy
          */
-        $vacancies = $this->prepareVacancies();
+        $vacancy = $this->vacancyHandler->create($data);
 
-        $data = array_merge(
-            $this->prepareResarvationBasicPayload(),
-            [
-                'email' => $email,
-            ]
-        );
-
-        /**
-         * @var array|null $reservation
-         */
-        $reservation = $this->reservationHandler->reservate(null, $data);
-
-        $this->assertNotNull($reservation);
-        // Check amount of available places in vacancy table
-        $this->assertSame(8, $vacancies['vacancy1']?->getFree());
-        $this->assertSame(13, $vacancies['vacancy2']?->getFree());
-        // Check reservation price
-        $this->assertSame(70, $reservation['price'] ?? 0);
+        $this->assertNotNull($vacancy);
+        $this->assertSame($this->price, $vacancy->getPrice());
+        $this->assertSame($this->free, $vacancy->getFree());
+        $this->assertSame($this->date->format('Y-m-d'), $vacancy->getFormatedDate());
     }
 
-    public function testFailUseOfReservateMethod(): void
+    public function testCreateMethodWithDateEqualNull(): void
     {
-        /**
-         * @var array<string,?Vacancy> $vacancies
-         */
-        $vacancies = $this->prepareVacancies();
-
-        $data = $this->prepareResarvationBasicPayload();
-
-        /**
-         * @var array|null $reservation
-         */
-        $reservation = $this->reservationHandler->reservate(null, $data);
-
-        $this->assertNotNull($reservation);
-        // Check amount of available places in vacancy table
-        $this->assertSame(8, $vacancies['vacancy1']?->getFree());
-        $this->assertSame(13, $vacancies['vacancy2']?->getFree());
-        // Check reservation price
-        $this->assertSame(70, $reservation['price'] ?? 0);
+        $this->testCreateMethodWithFieldEqualNull('date');
     }
 
-    public function testSuccessfulUseOfCancelMethod()
+    public function testCreateMethodWithPriceEqualNull(): void
     {
-        $email = 'test@example.com';
+        $this->testCreateMethodWithFieldEqualNull('price');
+    }
 
-        $vacancies = $this->prepareVacancies();
+    public function testCreateMethodWithFreeEqualNull(): void
+    {
+        $this->testCreateMethodWithFieldEqualNull('free');
+    }
 
-        $freeVacanciesBeforeReservation = array_map(function ($vacancy) {
-            return $vacancy->getFree();
-        }, $vacancies);
-
-        $data = array_merge(
-            $this->prepareResarvationBasicPayload(),
-            [
-                'email' => $email,
-            ]
-        );
+    private function testCreateMethodWithFieldEqualNull(string $field)
+    {
+        $data = $this->prepareVacancyBasicPayload();
+        $data[$field] = null;
 
         /**
-         * @var array|null $reservation
+         * @var Vacancy $vacancy
          */
-        $reservation = $this->reservationHandler->reservate(null, $data);
+        $vacancy = $this->vacancyHandler->create($data);
 
-        $reservationEntity = $this->entityManager->getRepository(Reservation::class)
-            ->findOneBy(['id' => $reservation['id']]);
-
-        $result = $this->reservationHandler->cancel($reservationEntity);
-
-        $freeVacanciesAfterCancelation = array_map(function ($vacancy) {
-            return $vacancy->getFree();
-        }, $vacancies);
-
-        $this->assertSame(true, $result);
-        $this->assertSame($freeVacanciesBeforeReservation, $freeVacanciesAfterCancelation);
+        $this->assertSame(null, $vacancy);
     }
 
-    /**
-     * @return array<string,?Vacancy>
-     */
-    private function prepareVacancies(): array
-    {
-        $vacancy = new Vacancy();
-        $vacancy->setDate($this->tommorow);
-        $vacancy->setFree(10);
-        $vacancy->setPrice(15);
-        $vacancy->setUpdatedAt($this->currentDate);
-        $vacancy->setCreatedAt($this->currentDate);
-        $this->entityManager->persist($vacancy);
-
-        $vacancy2 = new Vacancy();
-        $vacancy2->setDate($this->dayAfterTommorow);
-        $vacancy2->setFree(15);
-        $vacancy2->setPrice(20);
-        $vacancy2->setUpdatedAt($this->currentDate);
-        $vacancy2->setCreatedAt($this->currentDate);
-        $this->entityManager->persist($vacancy2);
-
-        $this->entityManager->flush();
-
-        return [
-            'vacancy1' => $vacancy,
-            'vacancy2' => $vacancy2,
-        ];
-    }
-
-    private function prepareResarvationBasicPayload(): array
+    private function prepareVacancyBasicPayload(): array
     {
         return [
-            'start_date' => $this->tommorow->format('Y-m-d'),
-            'end_date' => $this->dayAfterTommorow->format('Y-m-d'),
-            'booked_places' => $this->bookedPlaces,
+            'date' => $this->date->format('Y-m-d'),
+            'price' => $this->price,
+            'free' => $this->free,
         ];
     }
 }

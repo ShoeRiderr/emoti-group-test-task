@@ -5,10 +5,9 @@ namespace App\DependencyInjection;
 use App\Entity\Reservation;
 use App\Entity\User;
 use App\Entity\Vacancy;
-use App\Repository\UserRepository;
+use App\Exceptions\NotEnoughVacanciesException;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
-use Exception;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -35,19 +34,19 @@ class ReservationHandler
         $this->validateRequestedDateRangeAvailability($startDate, $endDate, $bookedPlaces);
 
         if (!$user) {
-            $email = $data['email'] ?? '';
+            if (!isset($data['email'])) {
+                return null;
+            }
+
+            $email = $data['email'];
 
             /**
-             * @var ?UserRepository $userRepository
+             * @var ?User $user
              */
             $user = $this->manager->getRepository(User::class)
                 ->findOneBy(['email' => $email]);
 
             if (!$user) {
-                if (empty($email)) {
-                    return null;
-                }
-
                 $user = new User();
                 $user->setEmail($email);
                 $user->setName($data['name'] ?? '');
@@ -111,8 +110,6 @@ class ReservationHandler
 
     public function cancel(Reservation $reservation): bool
     {
-        $result = false;
-
         try {
             $bookedPlaces = $reservation->getBookedPlaces();
 
@@ -128,14 +125,14 @@ class ReservationHandler
                 $this->manager->persist($vacancy);
             }
 
-            $this->manager->flush();
             $this->manager->remove($reservation);
-            $result = true;
+            $this->manager->flush();
+            return true;
         } catch (\Throwable $e) {
             $this->logger->error($e);
-        }
 
-        return $result;
+            return false;
+        }
     }
 
     /**
@@ -154,7 +151,7 @@ class ReservationHandler
 
         foreach ($vacancies as $vacancy) {
             if ($vacancy->getFree() < $bookedPlaces) {
-                throw new Exception('Not enough available vacancies.', Response::HTTP_UNPROCESSABLE_ENTITY);
+                throw new NotEnoughVacanciesException('Not enough available vacancies.', Response::HTTP_UNPROCESSABLE_ENTITY);
             }
         }
 

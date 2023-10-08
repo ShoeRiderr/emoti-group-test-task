@@ -3,6 +3,8 @@
 namespace App\Security;
 
 use App\Repository\UserRepository;
+use Symfony\Component\Config\FileLocator;
+use Symfony\Component\DependencyInjection\Loader\DirectoryLoader;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;

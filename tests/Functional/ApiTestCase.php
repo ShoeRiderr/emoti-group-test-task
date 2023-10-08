@@ -7,6 +7,7 @@ use ApiPlatform\Symfony\Bundle\Test\Client;
 use App\Entity\ApiToken;
 use App\Entity\User;
 use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\EntityManagerInterface;
 use Liip\TestFixturesBundle\Services\DatabaseToolCollection;
 use Liip\TestFixturesBundle\Services\DatabaseTools\AbstractDatabaseTool;
 
@@ -24,32 +25,35 @@ abstract class ApiTestCase extends ApiTestCaseBase
     {
         $this->client = static::createClient();
         $this->databaseTool = static::getContainer()->get(DatabaseToolCollection::class)->get();
-        $this->entityManager = self::getContainer()
-            ->get('doctrine')
-            ->getManager();
 
-            $user = new User();
-            $user->setName('test');
-            $user->setEmail('test@example.com');
-            $user->setPassword('password');
+        $this->entityManager = self::getContainer()->get(EntityManagerInterface::class);
 
-            // tell Doctrine you want to (eventually) save the Product (no queries yet)
-            $this->entityManager->persist($user);
-            $this->entityManager->flush();
+        $this->entityManager->getConnection()->setNestTransactionsWithSavepoints(true);
+        $this->entityManager->beginTransaction();
 
-            $apiToken = new ApiToken();
-            $apiToken->setToken(self::API_TOKEN);
-            $user->addApiToken($apiToken);
-            $this->entityManager->persist($apiToken);
-            // actually executes the queries (i.e. the INSERT query)
-            $this->entityManager->flush();
+        $user = new User();
+        $user->setName('test');
+        $user->setEmail('test@example.com');
+        $user->setPassword('password');
 
-            $this->user = $user;
-            $this->apiToken = $apiToken;
+        // tell Doctrine you want to (eventually) save the Product (no queries yet)
+        $this->entityManager->persist($user);
+        $this->entityManager->flush();
+
+        $apiToken = new ApiToken();
+        $apiToken->setToken(self::API_TOKEN);
+        $user->addApiToken($apiToken);
+        $this->entityManager->persist($apiToken);
+        // actually executes the queries (i.e. the INSERT query)
+        $this->entityManager->flush();
+
+        $this->user = $user;
+        $this->apiToken = $apiToken;
     }
 
     protected function tearDown(): void
     {
+        $this->entityManager->rollback();
         parent::tearDown();
 
         // doing this is recommended to avoid memory leaks
