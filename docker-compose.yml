@@ -49,6 +49,16 @@ services:
         POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-root}
         POSTGRES_USER: ${POSTGRES_USER:-user}
 
+  npm:
+    image: node:latest
+    working_dir: /var/www/html
+    entrypoint: ['npm']
+    profiles: ["npm"]
+    ports:
+      - '5173:5173'
+    volumes:
+      - ./:/var/www/html
+
 
 volumes:
   caddy_data:

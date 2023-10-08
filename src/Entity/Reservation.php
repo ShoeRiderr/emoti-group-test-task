@@ -12,10 +12,13 @@ use App\Controller\Reservation\DeleteController;
 use App\Repository\ReservationRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: ReservationRepository::class)]
 #[ApiResource(
+    normalizationContext: ['groups' => ['read']],
+    denormalizationContext: ['groups' => ['write']],
     operations: [
         new GetCollection(
             paginationItemsPerPage: 10,
@@ -42,20 +45,24 @@ class Reservation
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups("read")]
     private ?int $id = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE)]
     #[Assert\NotBlank]
     #[Assert\Type('date')]
+    #[Groups("read")]
     private ?\DateTimeInterface $startDate = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE)]
     #[Assert\NotBlank]
     #[Assert\Type('date')]
+    #[Groups("read")]
     private ?\DateTimeInterface $endDate = null;
 
     #[ORM\ManyToOne(inversedBy: 'reservations')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups("write")]
     private ?User $user = null;
 
     #[ORM\Column(
@@ -63,6 +70,7 @@ class Reservation
             "default" => "CURRENT_TIMESTAMP"
         ]
     )]
+    #[Groups("read")]
     private ?\DateTimeImmutable $createdAt = null;
 
     #[ORM\Column(
@@ -70,9 +78,11 @@ class Reservation
             "default" => "CURRENT_TIMESTAMP"
         ]
     )]
+    #[Groups("read")]
     private ?\DateTimeImmutable $updatedAt = null;
 
     #[ORM\Column(nullable: true)]
+    #[Groups("read")]
     private ?int $price = null;
 
     #[ORM\Column(options: [
@@ -80,6 +90,7 @@ class Reservation
     ])]
     #[Assert\NotBlank]
     #[Assert\Type('int')]
+    #[Groups("read")]
     private ?int $bookedPlaces = null;
 
     public function getId(): ?int

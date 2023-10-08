@@ -1,0 +1,16 @@
+{
+  "devDependencies": {
+    "vue": "^3.3.4",
+    "vue-loader": "^17.3.0",
+    "vue-template-compiler": "^2.7.14"
+  },
+  "scripts": {
+    "dev-server": "encore dev-server --hot",
+    "dev": "encore dev",
+    "watch": "encore dev --watch",
+    "build": "encore production"
+  },
+  "dependencies": {
+    "webpack-notifier": "^1.15.0"
+  }
+}

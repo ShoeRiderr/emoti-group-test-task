@@ -21,7 +21,7 @@ use Symfony\Component\Validator\Constraints as Assert;
             paginationItemsPerPage: 10,
             stateless: false
         ),
-        new Get(),
+        new Get(stateless: false),
         new Post(
             name: 'vacancies_create',
             uriTemplate: '/vacancies',
@@ -29,7 +29,7 @@ use Symfony\Component\Validator\Constraints as Assert;
             stateless: false,
             security: 'is_granted("ROLE_ADMIN")',
         ),
-        new Delete(),
+        new Delete(stateless: false),
     ]
 )]
 class Vacancy
