@@ -2,7 +2,6 @@
 
 namespace App\Controller;
 
-use ApiPlatform\Api\IriConverterInterface;
 use App\Entity\User;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -19,7 +18,7 @@ class ApiSecurityController extends AbstractController
     }
 
     #[Route(path: '/login', name: 'api_login')]
-    public function login(IriConverterInterface $iriConverter, #[CurrentUser] User $user = null): Response
+    public function login(#[CurrentUser] User $user = null): Response
     {
         if (!$this->isGranted('IS_AUTHENTICATED_FULLY')) {
             return $this->json([
