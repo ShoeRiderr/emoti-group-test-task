@@ -9,11 +9,13 @@ use Doctrine\Persistence\ObjectManager;
 
 class VacancyFixtures extends Fixture
 {
+    public const VACANCY_NUMBER = 50;
+
     public function load(ObjectManager $manager): void
     {
         $currentDate = new DateTimeImmutable();
 
-        for ($i = 1; $i <= 50; $i++) {
+        for ($i = 1; $i <= self::VACANCY_NUMBER; $i++) {
             $date = $currentDate;
             $newDate = $date->modify(sprintf("+%d day", $i));
 

@@ -47,6 +47,7 @@ class CreateController extends AbstractController
         }
         catch (Throwable $error) {
             $logger->error($error);
+
             return $this->json([
                 'error' => 'Something went wrong durring saving the reservation.',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);

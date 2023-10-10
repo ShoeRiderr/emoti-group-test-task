@@ -47,13 +47,13 @@ class ReservationTest extends ApiTestCase
     public function testSuccessfullReservationForOneDayOfLoggedOutUser(): void
     {
         $currentDate = new DateTimeImmutable();
-        $tommorow = $currentDate->modify('+1 day');
-        $dayAfterTommorow = $currentDate->modify('+2 day');
+        $tomorrow = $currentDate->modify('+1 day');
+        $dayAfterTomorrow = $currentDate->modify('+2 day');
 
         $data = [
             'email' => 'test@example.com',
-            'start_date' => $tommorow->format('Y-m-d'),
-            'end_date' => $dayAfterTommorow->format('Y-m-d'),
+            'start_date' => $tomorrow->format('Y-m-d'),
+            'end_date' => $dayAfterTomorrow->format('Y-m-d'),
             'booked_places' => 1,
         ];
 
@@ -87,13 +87,13 @@ class ReservationTest extends ApiTestCase
     public function testReservationOfOneDayWithNotEnoughVacancies(): void
     {
         $currentDate = new DateTimeImmutable();
-        $tommorow = $currentDate->modify('+1 day');
-        $dayAfterTommorow = $currentDate->modify('+2 day');
+        $tomorrow = $currentDate->modify('+1 day');
+        $dayAfterTomorrow = $currentDate->modify('+2 day');
 
         $data = [
             'email' => 'test@example.com',
-            'start_date' => $tommorow->format('Y-m-d'),
-            'end_date' => $dayAfterTommorow->format('Y-m-d'),
+            'start_date' => $tomorrow->format('Y-m-d'),
+            'end_date' => $dayAfterTomorrow->format('Y-m-d'),
             'booked_places' => 10000,
         ];
 

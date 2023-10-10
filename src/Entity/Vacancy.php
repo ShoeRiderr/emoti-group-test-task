@@ -2,14 +2,16 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Doctrine\Orm\Filter\RangeFilter;
+use ApiPlatform\Metadata\ApiFilter;
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Delete;
 use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Post;
 use App\Controller\Vacancy\CreateController;
+use App\Controller\Vacancy\GetCollectionController;
 use App\Repository\VacancyRepository;
-use Doctrine\DBAL\Types\DecimalType;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -18,6 +20,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[ApiResource(
     operations: [
         new GetCollection(
+            controller: GetCollectionController::class,
             paginationItemsPerPage: 10,
             stateless: false
         ),

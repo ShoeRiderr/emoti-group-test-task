@@ -13,3 +13,9 @@ nelmio_cors:
             allow_methods: ['POST', 'OPTIONS', 'PUT', 'GET', 'DELETE']
             max_age: 3600
         '^/': null
+        '^/login':
+            allow_origin: ['*']
+            allow_headers: ['*']
+            allow_methods: ['POST']
+            max_age: 3600
+

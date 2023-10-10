@@ -31,7 +31,16 @@ class ReservationHandler
         $endDate = new DateTimeImmutable($data['end_date'] ?? '');
         $bookedPlaces = $data['booked_places'] ?? 1;
 
-        $this->validateRequestedDateRangeAvailability($startDate, $endDate, $bookedPlaces);
+        /**
+         * @var Vacancy[] $vacancies
+         */
+        $vacancies = $this->manager->getRepository(Vacancy::class)
+            ->findByDateRangeAndAvailableFreePlaces($startDate, $endDate, $bookedPlaces)
+            ->getResult();
+
+        if (!$vacancies && empty($vacancies)) {
+            throw new NotEnoughVacanciesException('Not enough available vacancies or no vacancies in given date range.', Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
 
         if (!$user) {
             if (!isset($data['email'])) {
@@ -63,7 +72,7 @@ class ReservationHandler
         $reservation->setCreatedAt($currentDate);
         $reservation->setBookedPlaces($bookedPlaces);
         $reservation->setUpdatedAt($currentDate);
-        $price = $this->handleVacanciesAfterBookReservation($startDate, $endDate, $bookedPlaces)
+        $price = $this->handleVacanciesAfterBookReservation($vacancies, $bookedPlaces)
             ->getPrice();
 
         $reservation->setPrice($price);
@@ -74,18 +83,14 @@ class ReservationHandler
         return $reservation->toArray();
     }
 
+    /**
+     * @param Vacancy[] $vacancies
+     */
     public function handleVacanciesAfterBookReservation(
-        DateTimeImmutable $startDate,
-        DateTimeImmutable $endDate,
+        $vacancies,
         int $bookedPlaces = 1
     ): self {
         $price = 0;
-
-        /**
-         * @var Vacancy[] $vacancies
-         */
-        $vacancies = $this->manager->getRepository(Vacancy::class)
-            ->findByDateRange($startDate, $endDate);
 
         foreach ($vacancies as $vacancy) {
             $free = $vacancy->getFree() - $bookedPlaces;
@@ -117,7 +122,8 @@ class ReservationHandler
              * @var Vacancy[] $vacancies
              */
             $vacancies = $this->manager->getRepository(Vacancy::class)
-                ->findByDateRange($reservation->getStartDate(), $reservation->getEndDate());
+                ->findByDateRange($reservation->getStartDate(), $reservation->getEndDate())
+                ->getResult();
 
             foreach ($vacancies as $vacancy) {
                 $currentAvailableSlots = $vacancy->getFree();
@@ -133,28 +139,5 @@ class ReservationHandler
 
             return false;
         }
-    }
-
-    /**
-     * @throw Exception
-     */
-    public function validateRequestedDateRangeAvailability(
-        DateTimeImmutable $startDate,
-        DateTimeImmutable $endDate,
-        int $bookedPlaces = 1
-    ): bool {
-        /**
-         * @var Vacancy[] $vacancies
-         */
-        $vacancies = $this->manager->getRepository(Vacancy::class)
-            ->findByDateRange($startDate, $endDate);
-
-        foreach ($vacancies as $vacancy) {
-            if ($vacancy->getFree() < $bookedPlaces) {
-                throw new NotEnoughVacanciesException('Not enough available vacancies.', Response::HTTP_UNPROCESSABLE_ENTITY);
-            }
-        }
-
-        return true;
     }
 }

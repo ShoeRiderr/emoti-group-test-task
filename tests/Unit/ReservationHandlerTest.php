@@ -15,8 +15,8 @@ class ReservationHandlerTest extends KernelTestCase
     private ?EntityManager $entityManager;
     private ReservationHandler $reservationHandler;
     private DateTimeImmutable $currentDate;
-    private DateTimeImmutable $tommorow;
-    private DateTimeImmutable $dayAfterTommorow;
+    private DateTimeImmutable $tomorrow;
+    private DateTimeImmutable $dayAfterTomorrow;
     private int $bookedPlaces;
     /**
      * @var array<string,?Vacancy> $vacancies
@@ -30,8 +30,8 @@ class ReservationHandlerTest extends KernelTestCase
 
         $this->currentDate = new DateTimeImmutable();
 
-        $this->tommorow = $this->currentDate->modify('+1 day');
-        $this->dayAfterTommorow = $this->currentDate->modify('+2 day');
+        $this->tomorrow = $this->currentDate->modify('+1 day');
+        $this->dayAfterTomorrow = $this->currentDate->modify('+2 day');
         $this->bookedPlaces = 2;
 
         $this->entityManager->getConnection()->setNestTransactionsWithSavepoints(true);
@@ -124,7 +124,7 @@ class ReservationHandlerTest extends KernelTestCase
     private function prepareVacancies(): array
     {
         $vacancy = new Vacancy();
-        $vacancy->setDate($this->tommorow);
+        $vacancy->setDate($this->tomorrow);
         $vacancy->setFree(10);
         $vacancy->setPrice(15);
         $vacancy->setUpdatedAt($this->currentDate);
@@ -133,7 +133,7 @@ class ReservationHandlerTest extends KernelTestCase
         $this->entityManager->flush();
 
         $vacancy2 = new Vacancy();
-        $vacancy2->setDate($this->dayAfterTommorow);
+        $vacancy2->setDate($this->dayAfterTomorrow);
         $vacancy2->setFree(15);
         $vacancy2->setPrice(20);
         $vacancy2->setUpdatedAt($this->currentDate);
@@ -150,8 +150,8 @@ class ReservationHandlerTest extends KernelTestCase
     private function prepareResarvationBasicPayload(): array
     {
         return [
-            'start_date' => $this->tommorow->format('Y-m-d'),
-            'end_date' => $this->dayAfterTommorow->format('Y-m-d'),
+            'start_date' => $this->tomorrow->format('Y-m-d'),
+            'end_date' => $this->dayAfterTomorrow->format('Y-m-d'),
             'booked_places' => $this->bookedPlaces,
         ];
     }

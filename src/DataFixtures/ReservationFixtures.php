@@ -4,6 +4,7 @@ namespace App\DataFixtures;
 
 use App\DependencyInjection\ReservationHandler;
 use App\Entity\Reservation;
+use App\Entity\Vacancy;
 use DateTimeImmutable;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Common\DataFixtures\DependentFixtureInterface;
@@ -31,8 +32,16 @@ class ReservationFixtures extends Fixture implements DependentFixtureInterface
 
             $endDate = $endDate->modify(sprintf("+%d day", $randEnd));
             $bookedPlaces = rand(1, 3);
+
+            /**
+             * @var Vacancy[] $vacancies
+             */
+            $vacancies = $manager->getRepository(Vacancy::class)
+                ->findByDateRangeAndAvailableFreePlaces($startDate, $endDate, $bookedPlaces)
+                ->getResult();
+
             $price = $this->reservationHandler
-                ->handleVacanciesAfterBookReservation($startDate, $endDate, $bookedPlaces)
+                ->handleVacanciesAfterBookReservation($vacancies, $bookedPlaces)
                 ->getPrice();
 
             $reservation = new Reservation();
