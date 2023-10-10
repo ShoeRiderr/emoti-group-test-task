@@ -19,5 +19,8 @@ services:
             - '../src/Entity/'
             - '../src/Kernel.php'
 
+    App\Serializer\Normalizer\ApiCollectionNormalizer:
+        decorates: 'api_platform.hydra.normalizer.collection'
+        arguments: [ '@App\Serializer\Normalizer\ApiCollectionNormalizer.inner' ]
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
