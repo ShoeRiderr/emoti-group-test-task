@@ -52,8 +52,8 @@ class ReservationTest extends ApiTestCase
 
         $data = [
             'email' => 'test@example.com',
-            'start_date' => $tomorrow->format('Y-m-d'),
-            'end_date' => $dayAfterTomorrow->format('Y-m-d'),
+            'startDate' => $tomorrow->format('Y-m-d'),
+            'endDate' => $dayAfterTomorrow->format('Y-m-d'),
             'booked_places' => 1,
         ];
 
@@ -92,8 +92,8 @@ class ReservationTest extends ApiTestCase
 
         $data = [
             'email' => 'test@example.com',
-            'start_date' => $tomorrow->format('Y-m-d'),
-            'end_date' => $dayAfterTomorrow->format('Y-m-d'),
+            'startDate' => $tomorrow->format('Y-m-d'),
+            'endDate' => $dayAfterTomorrow->format('Y-m-d'),
             'booked_places' => 10000,
         ];
 

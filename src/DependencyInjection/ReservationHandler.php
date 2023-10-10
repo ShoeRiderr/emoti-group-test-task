@@ -27,8 +27,8 @@ class ReservationHandler
      */
     public function reservate(?User $user, array $data): ?array
     {
-        $startDate = new DateTimeImmutable($data['start_date'] ?? '');
-        $endDate = new DateTimeImmutable($data['end_date'] ?? '');
+        $startDate = new DateTimeImmutable($data['startDate'] ?? '');
+        $endDate = new DateTimeImmutable($data['endDate'] ?? '');
         $bookedPlaces = $data['booked_places'] ?? 1;
 
         /**

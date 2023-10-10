@@ -150,8 +150,8 @@ class ReservationHandlerTest extends KernelTestCase
     private function prepareResarvationBasicPayload(): array
     {
         return [
-            'start_date' => $this->tomorrow->format('Y-m-d'),
-            'end_date' => $this->dayAfterTomorrow->format('Y-m-d'),
+            'startdate' => $this->tomorrow->format('Y-m-d'),
+            'endDate' => $this->dayAfterTomorrow->format('Y-m-d'),
             'booked_places' => $this->bookedPlaces,
         ];
     }
