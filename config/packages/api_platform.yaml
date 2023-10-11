@@ -13,3 +13,6 @@ api_platform:
             access_token:
                 name: X-API-TOKEN
                 type: header
+    collection:
+        pagination:
+            enabled_parameter_name: pagination 

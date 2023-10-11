@@ -54,7 +54,7 @@ class ReservationTest extends ApiTestCase
             'email' => 'test@example.com',
             'startDate' => $tomorrow->format('Y-m-d'),
             'endDate' => $dayAfterTomorrow->format('Y-m-d'),
-            'booked_places' => 1,
+            'bookedPlaces' => 1,
         ];
 
         $response = $this->client->request('POST', '/api/reservations', [
@@ -94,7 +94,7 @@ class ReservationTest extends ApiTestCase
             'email' => 'test@example.com',
             'startDate' => $tomorrow->format('Y-m-d'),
             'endDate' => $dayAfterTomorrow->format('Y-m-d'),
-            'booked_places' => 10000,
+            'bookedPlaces' => 10000,
         ];
 
         $this->client->request('POST', '/api/reservations', [

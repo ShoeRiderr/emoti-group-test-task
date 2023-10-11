@@ -17,7 +17,8 @@ class ReservationHandler
 
     public function __construct(
         private EntityManagerInterface $manager,
-        private LoggerInterface $logger
+        private LoggerInterface $logger,
+        private VacancyHandler $vacancyHandler
     ) {
         $this->price = 0;
     }
@@ -29,17 +30,20 @@ class ReservationHandler
     {
         $startDate = new DateTimeImmutable($data['startDate'] ?? '');
         $endDate = new DateTimeImmutable($data['endDate'] ?? '');
-        $bookedPlaces = $data['booked_places'] ?? 1;
+        $bookedPlaces = $data['bookedPlaces'] ?? 1;
 
         /**
          * @var Vacancy[] $vacancies
          */
         $vacancies = $this->manager->getRepository(Vacancy::class)
-            ->findByDateRangeAndAvailableFreePlaces($startDate, $endDate, $bookedPlaces)
+            ->findByDateRange($startDate, $endDate)
             ->getResult();
 
-        if (!$vacancies && empty($vacancies)) {
-            throw new NotEnoughVacanciesException('Not enough available vacancies or no vacancies in given date range.', Response::HTTP_UNPROCESSABLE_ENTITY);
+        // Validate if there vacancies in given date range have enoughr free slots
+        $validationResult = $this->vacancyHandler->getByDateRangeAndFreePlaces($vacancies, $bookedPlaces);
+
+        if (empty($validationResult)) {
+            throw new NotEnoughVacanciesException('Not enough available vacancies.', Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
         if (!$user) {

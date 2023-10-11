@@ -26,14 +26,10 @@ use Symfony\Component\Validator\Constraints as Assert;
         ),
         new Get(stateless: false),
         new Post(
-            name: 'reservations_create',
-            uriTemplate: '/reservations',
             controller: CreateController::class,
             stateless: false
         ),
         new Delete(
-            name: 'reservations_delete',
-            uriTemplate: '/reservations/{id}',
             controller: DeleteController::class,
             stateless: false,
             security: 'is_granted("ROLE_ADMIN") or (object.user == user and previous_object.user == user)',

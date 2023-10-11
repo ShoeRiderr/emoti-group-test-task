@@ -25,9 +25,30 @@ class VacancyTest extends ApiTestCase
         ]);
     }
 
-    public function testSuccessfullCollectionFilter(): void
+    public function testSuccessfulColectionWithoutFilter(): void
     {
         $this->client->request('GET', '/api/vacancies', [
+            'headers' => ['X-API-TOKEN' => self::API_TOKEN]
+        ]);
+
+        $this->assertResponseIsSuccessful();
+
+        $this->assertResponseHeaderSame(
+            'content-type',
+            'application/ld+json; charset=utf-8'
+        );
+
+        $this->assertJsonContains([
+            '@context'         => '/api/contexts/Vacancy',
+            '@id'              => '/api/vacancies',
+            '@type'            => 'hydra:Collection',
+            'hydra:totalItems' => VacancyFixtures::VACANCY_NUMBER,
+        ]);
+    }
+
+    public function testSuccessfulCollectionFilter(): void
+    {
+        $response = $this->client->request('GET', '/api/vacancies', [
             'query' => [
                 'startDate' => $this->tomorrow->format('Y-m-d'),
                 'endDate' => $this->dayAfterTomorrow->format('Y-m-d'),
@@ -36,24 +57,22 @@ class VacancyTest extends ApiTestCase
             'headers' => ['X-API-TOKEN' => self::API_TOKEN]
         ]);
 
+        $responseContent = $response->getContent();
+        $responseContent = json_decode($responseContent);
+
         $this->assertResponseIsSuccessful();
 
         $this->assertResponseHeaderSame(
             'content-type',
-            'application/ld+json; charset=utf-8'
+            'application/json'
         );
 
-        $this->assertJsonContains([
-            '@context'         => '/api/contexts/Vacancy',
-            '@id'              => '/api/vacancies',
-            '@type'            => 'hydra:Collection',
-            'hydra:totalItems' => 2,
-        ]);
+        $this->assertEquals(2, count($responseContent));
     }
 
     public function testVacancyGetCollectionMethodWithEmptyStartDateField(): void
     {
-        $this->client->request('GET', '/api/vacancies', [
+        $response = $this->client->request('GET', '/api/vacancies', [
             'query' => [
                 'endDate' => $this->dayAfterTomorrow->format('Y-m-d'),
                 'free' => 2,
@@ -61,24 +80,22 @@ class VacancyTest extends ApiTestCase
             'headers' => ['X-API-TOKEN' => self::API_TOKEN]
         ]);
 
+        $responseContent = $response->getContent();
+        $responseContent = json_decode($responseContent);
+
         $this->assertResponseIsSuccessful();
 
         $this->assertResponseHeaderSame(
             'content-type',
-            'application/ld+json; charset=utf-8'
+            'application/json'
         );
 
-        $this->assertJsonContains([
-            '@context'         => '/api/contexts/Vacancy',
-            '@id'              => '/api/vacancies',
-            '@type'            => 'hydra:Collection',
-            'hydra:totalItems' => 2,
-        ]);
+        $this->assertEquals(2, count($responseContent));
     }
 
     public function testVacancyGetCollectionMethodWithEmptyEndDateField(): void
     {
-        $this->client->request('GET', '/api/vacancies', [
+        $response = $this->client->request('GET', '/api/vacancies', [
             'query' => [
                 'startDate' => $this->dayAfterTomorrow->format('Y-m-d'),
                 'free' => 2,
@@ -86,23 +103,22 @@ class VacancyTest extends ApiTestCase
             'headers' => ['X-API-TOKEN' => self::API_TOKEN]
         ]);
 
+        $responseContent = $response->getContent();
+        $responseContent = json_decode($responseContent);
+
         $this->assertResponseIsSuccessful();
 
         $this->assertResponseHeaderSame(
             'content-type',
-            'application/ld+json; charset=utf-8'
+            'application/json'
         );
 
-        $this->assertJsonContains([
-            '@context'         => '/api/contexts/Vacancy',
-            '@id'              => '/api/vacancies',
-            '@type'            => 'hydra:Collection',
-        ]);
+        $this-> assertTrue(empty($responseContent));
     }
 
     public function testVacancyGetCollectionMethodWithEmptyFreeField(): void
     {
-        $this->client->request('GET', '/api/vacancies', [
+        $response = $this->client->request('GET', '/api/vacancies', [
             'query' => [
                 'startDate' => $this->tomorrow->format('Y-m-d'),
                 'endDate' => $this->dayAfterTomorrow->format('Y-m-d'),
@@ -110,19 +126,17 @@ class VacancyTest extends ApiTestCase
             'headers' => ['X-API-TOKEN' => self::API_TOKEN]
         ]);
 
+        $responseContent = $response->getContent();
+        $responseContent = json_decode($responseContent);
+
         $this->assertResponseIsSuccessful();
 
         $this->assertResponseHeaderSame(
             'content-type',
-            'application/ld+json; charset=utf-8'
+            'application/json'
         );
 
-        $this->assertJsonContains([
-            '@context'         => '/api/contexts/Vacancy',
-            '@id'              => '/api/vacancies',
-            '@type'            => 'hydra:Collection',
-            'hydra:totalItems' => 2,
-        ]);
+        $this->assertEquals(2, count($responseContent));
     }
 
     public function testVacancyGetCollectionMethodWithInvalidStartDateField(): void

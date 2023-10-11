@@ -5,6 +5,7 @@ namespace App\Controller\Vacancy;
 use ApiPlatform\Doctrine\Orm\Paginator;
 use ApiPlatform\Symfony\Validator\Exception\ValidationException;
 use ApiPlatform\Validator\ValidatorInterface;
+use App\DependencyInjection\VacancyHandler;
 use App\Repository\VacancyRepository;
 use App\Requests\VacancyGetCollectionRequest;
 use Psr\Log\LoggerInterface;
@@ -24,7 +25,8 @@ class GetCollectionController extends AbstractController
         Request $request,
         VacancyRepository $vacancyRepository,
         ValidatorInterface $validator,
-        LoggerInterface $logger
+        LoggerInterface $logger,
+        VacancyHandler $vacancyHandler
     ): Paginator|Response {
         try {
             $page = (int) $request->query->get('page', 1);
@@ -44,11 +46,19 @@ class GetCollectionController extends AbstractController
                 )
             );
 
-            return $vacancyRepository->findByDateRangeAndAvailableFreePlacesWithPagination(
-                $startDate,
-                $endDate,
-                $free,
-                $page
+            if (!$startDate && !$endDate && !$free) {
+                return $vacancyRepository->findWithPagination($page);
+            }
+
+            $vacancies = $vacancyHandler->getByDateRangeAndFreePlaces([
+                'startDate' => $startDate,
+                'endDate' => $endDate,
+                'free' => $free,
+            ]);
+
+            return new JsonResponse(
+                // Format to array for json response
+                array_map(fn ($vacancy) => $vacancy->toArray(), $vacancies)
             );
         } catch (ValidationException $validationException) {
             return new JsonResponse(

@@ -28,29 +28,10 @@ class VacancyRepository extends ServiceEntityRepository
         parent::__construct($registry, Vacancy::class);
     }
 
-    /**
-     * @return Query
-     */
-    public function findByDateRange(?\DateTimeInterface $startDate, ?\DateTimeInterface $endDate)
+    public function findByDateRange(?\DateTimeInterface $startDate, ?\DateTimeInterface $endDate): Query
     {
-        return $this->createQueryBuilder('v')
-            ->where('v.date >= :start')
-            ->andWhere('v.date <= :end')
-            ->setParameter('start', $startDate)
-            ->setParameter('end', $endDate)
-            ->orderBy('v.id', 'ASC')
-            ->setMaxResults(10)
-            ->getQuery();
-    }
-
-    public function findByDateRangeAndAvailableFreePlacesWithPagination(
-        #[Assert\Date, Assert\NotBlank(allowNull: true)] $startDate,
-        #[Assert\Date, Assert\NotBlank(allowNull: true)] $endDate,
-        ?int $freePlaces,
-        int $page = 1
-    ): Paginator {
-        $firstResult = ($page - 1) * self::ITEMS_PER_PAGE;
         $queryBuilder = $this->createQueryBuilder('v');
+
         if ($startDate) {
             $queryBuilder->where('v.date >= :start')
                 ->setParameter('start', $startDate);
@@ -59,10 +40,16 @@ class VacancyRepository extends ServiceEntityRepository
             $queryBuilder->andWhere('v.date <= :end')
                 ->setParameter('end', $endDate);
         }
-        if ($freePlaces) {
-            $queryBuilder->andWhere('v.free >= :freePlaces')
-                ->setParameter('freePlaces', $freePlaces);
-        }
+
+        return $queryBuilder->orderBy('v.id', 'ASC')
+            ->getQuery();
+    }
+
+    public function findWithPagination(
+        int $page = 1
+    ): Paginator {
+        $firstResult = ($page - 1) * self::ITEMS_PER_PAGE;
+        $queryBuilder = $this->createQueryBuilder('v');
 
         $queryBuilder->orderBy('v.id', 'ASC');
 
@@ -77,40 +64,4 @@ class VacancyRepository extends ServiceEntityRepository
 
         return $paginator;
     }
-
-    public function findByDateRangeAndAvailableFreePlaces(
-        #[Assert\Date, Assert\NotBlank(allowNull: true)] $startDate,
-        #[Assert\Date, Assert\NotBlank(allowNull: true)] $endDate,
-        ?int $freePlaces
-    ): Query {
-        $queryBuilder = $this->createQueryBuilder('v');
-
-        if ($startDate) {
-            $queryBuilder->where('v.date >= :start')
-                ->setParameter('start', $startDate);
-        }
-
-        if ($endDate) {
-            $queryBuilder->andWhere('v.date <= :end')
-                ->setParameter('end', $endDate);
-        }
-
-        if ($freePlaces) {
-            $queryBuilder->andWhere('v.free >= :freePlaces')
-                ->setParameter('freePlaces', $freePlaces);
-        }
-
-        return $queryBuilder->orderBy('v.id', 'ASC')
-            ->getQuery();
-    }
-
-    //    public function findOneBySomeField($value): ?Vacancy
-    //    {
-    //        return $this->createQueryBuilder('v')
-    //            ->andWhere('v.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->getQuery()
-    //            ->getOneOrNullResult()
-    //        ;
-    //    }
 }

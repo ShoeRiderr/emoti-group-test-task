@@ -37,7 +37,7 @@ class ReservationFixtures extends Fixture implements DependentFixtureInterface
              * @var Vacancy[] $vacancies
              */
             $vacancies = $manager->getRepository(Vacancy::class)
-                ->findByDateRangeAndAvailableFreePlaces($startDate, $endDate, $bookedPlaces)
+                ->findByDateRange($startDate, $endDate)
                 ->getResult();
 
             $price = $this->reservationHandler
