@@ -46,18 +46,29 @@ class VacancyRepository extends ServiceEntityRepository
     }
 
     public function findWithPagination(
+        bool $excludeNotAvailable = false,
+        int $itemsPerPage = self::ITEMS_PER_PAGE,
+        bool $excludePast = false,
         int $page = 1
     ): Paginator {
         $firstResult = ($page - 1) * self::ITEMS_PER_PAGE;
+
         $queryBuilder = $this->createQueryBuilder('v');
+
+        if ($excludeNotAvailable) {
+            $queryBuilder->where('v.free > 0');
+        }
+
+        if ($excludePast) {
+            $queryBuilder->where('v.date >= CURRENT_DATE()');
+        }
 
         $queryBuilder->orderBy('v.id', 'ASC');
 
         $criteria = Criteria::create()
             ->setFirstResult($firstResult)
-            ->setMaxResults(self::ITEMS_PER_PAGE);
+            ->setMaxResults($itemsPerPage);
         $queryBuilder->addCriteria($criteria);
-
 
         $doctrinePaginator = new DoctrinePaginator($queryBuilder);
         $paginator = new Paginator($doctrinePaginator);

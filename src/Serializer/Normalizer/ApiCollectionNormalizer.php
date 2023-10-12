@@ -36,14 +36,13 @@ final class ApiCollectionNormalizer implements NormalizerInterface, NormalizerAw
             if ($data['@id'] === '/api/vacancies') {
                 $totalPrice = 0;
 
-                foreach ($data['hydra:member'] as $credit) {
-                    $totalPrice += $credit['price'];
+                foreach ($data['hydra:member'] as $vacancy) {
+                    $totalPrice += $vacancy['price'];
                 }
 
                 $data['totalPrice'] = $totalPrice;
                 $data['totalPriceFormatted'] = $totalPrice / 100;
             }
-
         }
 
         return $data;

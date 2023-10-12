@@ -33,6 +33,9 @@ class GetCollectionController extends AbstractController
             $startDate = $request->query->get('startDate');
             $endDate = $request->query->get('endDate');
             $free = $request->query->get('free');
+            $excludeNotAvailable = filter_var($request->query->get('excludeNotAvailable', false), FILTER_VALIDATE_BOOLEAN);
+            $excludePast = filter_var($request->query->get('excludePast', false), FILTER_VALIDATE_BOOLEAN);
+            $itemsPerPage = $request->query->get('itemsPerPage', 10);
 
             if ($free && is_numeric($free)) {
                 $free = (int) $free;
@@ -47,19 +50,24 @@ class GetCollectionController extends AbstractController
             );
 
             if (!$startDate && !$endDate && !$free) {
-                return $vacancyRepository->findWithPagination($page);
+                return $vacancyRepository->findWithPagination($excludeNotAvailable, $itemsPerPage, $excludePast, $page);
             }
 
             $vacancies = $vacancyHandler->getByDateRangeAndFreePlaces([
                 'startDate' => $startDate,
                 'endDate' => $endDate,
-                'free' => $free,
+                'bookedPlaces' => $free,
             ]);
 
-            return new JsonResponse(
-                // Format to array for json response
-                array_map(fn ($vacancy) => $vacancy->toArray(), $vacancies)
-            );
+            $vacancies = array_map(fn ($vacancy) => $vacancy->toArray(), $vacancies);
+            $totalPrice = array_sum(array_column($vacancies, 'price')) * $free;
+            $totalPriceFormatted = $totalPrice / 100;
+
+            $result['data'] = $vacancies;
+            $result['totalPrice'] = $totalPrice;
+            $result['totalPriceFormatted'] = $totalPriceFormatted;
+
+            return new JsonResponse($result);
         } catch (ValidationException $validationException) {
             return new JsonResponse(
                 $validationException->getMessage(),
@@ -68,7 +76,7 @@ class GetCollectionController extends AbstractController
         } catch (Throwable $error) {
             $logger->error($error);
 
-            return new JsonResponse('Somethong went wrong. Try again later.', Response::HTTP_INTERNAL_SERVER_ERROR);
+            return new JsonResponse('Something went wrong. Try again later.', Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 }
